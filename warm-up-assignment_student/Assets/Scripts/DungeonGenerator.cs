@@ -21,11 +21,16 @@ public class DungeonGenerator : MonoBehaviour
     {
         stopwatch = System.Diagnostics.Stopwatch.StartNew();
         doneRooms.Clear();
+
+        RectInt outerwall = new RectInt(dungeonBounds.x-1, dungeonBounds.y-1, dungeonBounds.width+2,dungeonBounds.height+2);
+        doneRooms.Add(outerwall);
         toDoRooms.Add(dungeonBounds);
+
         for (int i = 0; i < toDoRooms.Count; i++)
             Splitrooms(toDoRooms[i]);
 
         toDoRooms.Clear();
+        
         stopwatch.Stop();
         Debug.Log(Math.Round(stopwatch.Elapsed.TotalMilliseconds, 3));
     }
@@ -49,7 +54,7 @@ public class DungeonGenerator : MonoBehaviour
         if (splitHorizontally)
         {
             int split = UnityEngine.Random.Range(minRoomSize, room.height - minRoomSize);
-            RectInt newRoom1 = new RectInt(room.x, room.y +2, room.width, split);
+            RectInt newRoom1 = new RectInt(room.x, room.y, room.width, split +1);
             RectInt newRoom2 = new RectInt(room.x, room.y + split, room.width, room.height - split);
 
             if (newRoom1.height >= minRoomSize * 2 && newRoom1.width >= minRoomSize * 2)
@@ -66,7 +71,7 @@ public class DungeonGenerator : MonoBehaviour
         else
         {
             int split = UnityEngine.Random.Range(minRoomSize, room.width - minRoomSize);
-            RectInt newRoom1 = new RectInt(room.x, room.y, split, room.height);
+            RectInt newRoom1 = new RectInt(room.x, room.y, split +1, room.height);
             RectInt newRoom2 = new RectInt(room.x + split, room.y, room.width - split, room.height);
 
             if (newRoom1.height >= minRoomSize * 2 && newRoom1.width >= minRoomSize * 2)

@@ -14,5 +14,4 @@ public class InventoryTester : MonoBehaviour
         inventorySystem.AddItem("Mana");
         
     }
-
 }
