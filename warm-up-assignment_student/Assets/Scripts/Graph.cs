@@ -15,12 +15,25 @@ public class Graph<node>
     }
     public void AddEdge(node fromNode,node toNode) 
     {
-        if (!adjacencyList.ContainsKey(fromNode) && !adjacencyList.ContainsKey(toNode))
+        if (!adjacencyList.ContainsKey(fromNode) || !adjacencyList.ContainsKey(toNode))
         {
-            Debug.Log("one or both nodes do not exist in the graph.");
+            // Debug.Log("one or both nodes do not exist in the graph.");
             return;
         }
+        
         adjacencyList[fromNode].Add(toNode);
         adjacencyList[toNode].Add(fromNode);
     }
+
+    // public void PrintGraph()
+    // {
+    //     foreach (var node in adjacencyList)
+    //     {
+    //         Debug.Log("key: " + node.Key);
+    //         foreach (var edge in node.Value)
+    //         {
+    //             Debug.Log("value: " + edge);
+    //         }
+    //     }
+    // }
 }
