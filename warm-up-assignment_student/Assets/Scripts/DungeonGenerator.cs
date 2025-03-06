@@ -49,7 +49,7 @@ public class DungeonGenerator : MonoBehaviour
         if (splitHorizontally)
         {
             int split = UnityEngine.Random.Range(minRoomSize, room.height - minRoomSize);
-            RectInt newRoom1 = new RectInt(room.x, room.y, room.width, split);
+            RectInt newRoom1 = new RectInt(room.x, room.y +2, room.width, split);
             RectInt newRoom2 = new RectInt(room.x, room.y + split, room.width, room.height - split);
 
             if (newRoom1.height >= minRoomSize * 2 && newRoom1.width >= minRoomSize * 2)
