@@ -35,13 +35,15 @@ public class DungeonGenerator : MonoBehaviour
 
         toDoRooms.Clear();
 
+        //stopwatch stop for making rooms and after that add doors
         stopwatch.Stop();
         Debug.Log(Math.Round(stopwatch.Elapsed.TotalMilliseconds, 3));
         DoorMaker();
 
-
+        //at the end also add a outer wall so that one doesnt look like shit.
         RectInt outerwall = new RectInt(dungeonBounds.x-1, dungeonBounds.y-1, dungeonBounds.width+2,dungeonBounds.height+2);
         doneRooms.Add(outerwall);
+        Debug.Log("amount of rooms: " + doneRooms.Count);
     }
 
     void Update()
@@ -99,7 +101,7 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
     #endregion 
-    #region doors
+    #region Doors
     void DoorMaker()
     {
         for (int i = 0; i < doneRooms.Count; i++)
@@ -126,5 +128,9 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Graph
+    
     #endregion
 }
