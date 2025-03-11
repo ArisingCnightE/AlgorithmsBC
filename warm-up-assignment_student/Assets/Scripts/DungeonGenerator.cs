@@ -3,6 +3,8 @@ using NaughtyAttributes;
 using System;
 using UnityEngine;
 using Unity.VisualScripting;
+using System.Text;
+using System.Collections;
 
 
 public class DungeonGenerator : MonoBehaviour
@@ -14,8 +16,14 @@ public class DungeonGenerator : MonoBehaviour
     private List<RectInt> toDoRooms = new List<RectInt>();
     private List<RectInt> doneRooms = new List<RectInt>();
     private List<RectInt> doors = new List<RectInt>();
+    private List<RectInt> removedRooms = new List<RectInt>();
     System.Diagnostics.Stopwatch stopwatch;
     System.Random random= new();
+    public GenerationMethod generationMethod;
+    public enum GenerationMethod
+    {
+        INSTANT, COROUTINE, PRESS
+    }
     public int seed;
 
 
@@ -29,11 +37,19 @@ public class DungeonGenerator : MonoBehaviour
         toDoRooms.Add(dungeonBounds);
         random = new(seed);
 
-        //generate dungeon!
-        for (int i = 0; i < toDoRooms.Count; i++)
-            Splitrooms(toDoRooms[i]);
+        switch (generationMethod)
+        {
+            case GenerationMethod.INSTANT:
+                for (int i = 0; i < toDoRooms.Count; i++)
+                Splitrooms(toDoRooms[i]);
+            break;
+            case GenerationMethod.COROUTINE:
+                StartCoroutine(RoomSplittingCoroutine());
+            break;
+            case GenerationMethod.PRESS:
+            break;
+        }
 
-        toDoRooms.Clear();
         //stopwatch stop and start generating the rooms.
         stopwatch.Stop();
         Debug.Log(Math.Round(stopwatch.Elapsed.TotalMilliseconds, 3));
@@ -47,13 +63,31 @@ public class DungeonGenerator : MonoBehaviour
 
     void Update()
     {
+        foreach (RectInt room in toDoRooms)
+        {
+            AlgorithmsUtils.DebugRectInt(room, Color.yellow,0,false,wallHeight);
+        }
         foreach (RectInt room in doneRooms)
         {
-            AlgorithmsUtils.DebugRectInt(room, Color.yellow,0, false, wallHeight);
+            AlgorithmsUtils.DebugRectInt(room, Color.green,0, false, wallHeight);
         }
         foreach (RectInt door in doors)
         {
             AlgorithmsUtils.DebugRectInt(door, Color.blue,0, false, wallHeight);
+        }
+        foreach(RectInt room in removedRooms)
+        {
+            AlgorithmsUtils.DebugRectInt(room, Color.red,0, false, wallHeight);
+        }
+    }
+
+    IEnumerator RoomSplittingCoroutine()
+    {
+        while(toDoRooms.Count > 0) {
+            RectInt rectIntroom = toDoRooms[0];
+            toDoRooms.RemoveAt(0);
+            Splitrooms(rectIntroom);
+            yield return new WaitForSeconds(0.2f);
         }
     }
 

@@ -470,6 +470,7 @@ MonoBehaviour:
     height: 100
   minRoomSize: 5
   wallHeight: 0
+  generationMethod: 1
   seed: 1
 --- !u!4 &1232158168
 Transform:
