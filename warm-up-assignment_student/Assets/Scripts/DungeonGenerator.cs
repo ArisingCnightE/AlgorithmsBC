@@ -87,7 +87,7 @@ public class DungeonGenerator : MonoBehaviour
             RectInt rectIntroom = toDoRooms[0];
             toDoRooms.RemoveAt(0);
             Splitrooms(rectIntroom);
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.001f);
         }
     }
 
@@ -135,6 +135,7 @@ public class DungeonGenerator : MonoBehaviour
     }
     #endregion 
     #region Doors
+    [Button("Doors")]
     void DoorMaker()
     {
         for (int i = 0; i < doneRooms.Count; i++)
