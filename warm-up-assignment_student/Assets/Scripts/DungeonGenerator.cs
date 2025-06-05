@@ -2,9 +2,11 @@ using System.Collections.Generic;
 using NaughtyAttributes;
 using System;
 using UnityEngine;
-using Unity.VisualScripting;
-using System.Text;
 using System.Collections;
+using Unity.Collections;
+using Unity.Mathematics;
+using Unity.VisualScripting;
+using Unity.AI.Navigation;
 
 
 public class DungeonGenerator : MonoBehaviour
@@ -26,6 +28,14 @@ public class DungeonGenerator : MonoBehaviour
         INSTANT, COROUTINE, PRESS
     }
     public int seed;
+
+    public GameObject wall;
+    public GameObject floor;
+    public GameObject wallParent;
+    public GameObject floorParent;
+    public GameObject bounds;  
+    [SerializeField] private HashSet<Vector3> wallPos = new();
+    [SerializeField] private NavMeshSurface navMeshSurface;
 
 
     [Button("Generate")]
@@ -56,7 +66,7 @@ public class DungeonGenerator : MonoBehaviour
         //stopwatch stop and start generating the rooms.
         stopwatch.Stop();
         Debug.Log(Math.Round(stopwatch.Elapsed.TotalMilliseconds, 3));
-       
+
 
         //make a outerwall so the border doesnt look like shit.
         RectInt outerwall = new RectInt(dungeonBounds.x - 1, dungeonBounds.y - 1, dungeonBounds.width + 2, dungeonBounds.height + 2);
@@ -103,7 +113,8 @@ public class DungeonGenerator : MonoBehaviour
 
     IEnumerator RoomSplittingCoroutine()
     {
-        while (toDoRooms.Count > 0) {
+        while (toDoRooms.Count > 0)
+        {
             RectInt rectIntroom = toDoRooms[0];
             toDoRooms.RemoveAt(0);
             Splitrooms(rectIntroom);
@@ -125,12 +136,12 @@ public class DungeonGenerator : MonoBehaviour
             RectInt newRoom1 = new RectInt(room.x, room.y, room.width, split + 1);
             RectInt newRoom2 = new RectInt(room.x, room.y + split, room.width, room.height - split);
 
-            if (newRoom1.height >= minRoomSize * 2 && newRoom1.width >= minRoomSize * 2)
+            if (newRoom1.height >= minRoomSize * 2 || newRoom1.width >= minRoomSize * 2)
                 toDoRooms.Add(newRoom1);
             else
                 doneRooms.Add(newRoom1);
 
-            if (newRoom2.width >= minRoomSize * 2 && newRoom2.height >= minRoomSize * 2)
+            if (newRoom2.width >= minRoomSize * 2 || newRoom2.height >= minRoomSize * 2)
                 toDoRooms.Add(newRoom2);
             else
                 doneRooms.Add(newRoom2);
@@ -142,12 +153,12 @@ public class DungeonGenerator : MonoBehaviour
             RectInt newRoom1 = new RectInt(room.x, room.y, split + 1, room.height);
             RectInt newRoom2 = new RectInt(room.x + split, room.y, room.width - split, room.height);
 
-            if (newRoom1.height >= minRoomSize * 2 && newRoom1.width >= minRoomSize * 2)
+            if (newRoom1.height >= minRoomSize * 2 || newRoom1.width >= minRoomSize * 2)
                 toDoRooms.Add(newRoom1);
             else
                 doneRooms.Add(newRoom1);
 
-            if (newRoom2.width >= minRoomSize * 2 && newRoom2.height >= minRoomSize * 2)
+            if (newRoom2.width >= minRoomSize * 2 || newRoom2.height >= minRoomSize * 2)
                 toDoRooms.Add(newRoom2);
             else
                 doneRooms.Add(newRoom2);
@@ -197,13 +208,6 @@ public class DungeonGenerator : MonoBehaviour
         }
         foreach (RectInt room in graph.GetNodes())
         {
-            // foreach (RectInt roomlink in graph.GetNodes())
-            // {
-            //     if (AlgorithmsUtils.Intersects(room, roomlink))
-            //     {
-            //         graph.AddEdge(room, roomlink);
-            //     }
-            // }
             foreach (RectInt door in doors)
             {
                 if (AlgorithmsUtils.Intersects(door, room))
@@ -212,6 +216,116 @@ public class DungeonGenerator : MonoBehaviour
                 }
             }
         }
+    }
+
+    [Button("connected?")]
+    public void BFS()
+    {
+        RectInt startNode = doneRooms[0];
+        Queue<RectInt> queue = new Queue<RectInt>();
+        queue.Enqueue(startNode);
+        List<RectInt> discovered = new List<RectInt>();
+        discovered.Add(startNode);
+
+
+        while (queue.Count > 0)
+        {
+            RectInt newNode = queue.Dequeue();
+            foreach (RectInt node in graph.GetNeighbors(newNode))
+            {
+                if (!discovered.Contains(node))
+                {
+                    queue.Enqueue(node);
+                    discovered.Add(node);
+                }
+            }
+        }
+        if (discovered.Count == graph.GetNodeCount())
+        {
+            Debug.Log("CONNECTED");
+        }
+        else
+        {
+            Debug.Log("NOT CONNECTED");
+        }
+
+    }
+    #endregion
+
+    #region SpawnAssets 
+    [Button("spawnDungeon")]
+    void SpawnAssets()
+    {
+        int roomNumber = 0;
+        foreach (RectInt room in doneRooms)
+        {
+            GameObject roomParents = new GameObject("room" + roomNumber);
+            roomNumber++;
+            roomParents.transform.SetParent(wallParent.transform);
+
+            for (int x = 0; x < room.width; x++)
+            {
+                if (!OverlapsDoor(room.x + x, room.y))
+                {
+                    CreateWall(new Vector3(room.x + x + 0.5f, 0.5f, room.y + 0.5f), roomParents.transform);
+                }
+            }
+            for (int y = 0; y < room.height; y++)
+            {
+                if (!OverlapsDoor(room.x, room.y + y))
+                {
+                    CreateWall(new Vector3(room.x + 0.5f, 0.5f, room.y + y + 0.5f), roomParents.transform);
+                }
+            }
+        }
+
+        for (int x = 0; x < dungeonBounds.width; x++)
+        {
+            CreateWall(new Vector3(x + 0.5f, 0.5f, dungeonBounds.height + 0.5f), bounds.transform);
+            CreateWall(new Vector3(x + 0.5f, 0.5f, dungeonBounds.height - 0.5f), bounds.transform);
+        }
+        for (int y = 0; y <= dungeonBounds.height; y++)
+        {
+            CreateWall(new Vector3(dungeonBounds.width + 0.5f, 0.5f, y + 0.5f), bounds.transform);
+            CreateWall(new Vector3(dungeonBounds.width - 0.5f, 0.5f, y + 0.5f), bounds.transform);
+        }
+        
+        foreach (RectInt room in doneRooms)
+        {
+            foreach (Vector2Int position in room.allPositionsWithin)
+            {
+                if (!wallPos.Contains(new Vector3(position.x + 0.5f, 0.5f, position.y + 0.5f)))
+                {
+                    Instantiate(floor, new Vector3(position.x + 0.5f, 0, position.y + 0.5f), floor.transform.rotation, floorParent.transform);
+                }
+            }
+        }
+    }
+
+    bool OverlapsDoor(int x, int y)
+    {
+        foreach (RectInt door in doors)
+        {
+            if (door.y == y && door.x == x) return true;
+        }
+        return false;
+    }
+
+    void CreateWall(Vector3 newposition, Transform wallParent)
+    {
+        if (!wallPos.Contains(newposition))
+        {
+            Instantiate(wall, newposition, quaternion.identity, wallParent);
+            wallPos.Add(newposition);
+        }
+    }
+    #endregion
+    #region Navmesh
+
+        [Button]
+    public void BakeNavMesh()
+    {
+        navMeshSurface.BuildNavMesh();
     }
     #endregion
 }
