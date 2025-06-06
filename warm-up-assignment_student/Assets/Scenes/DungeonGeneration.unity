@@ -776,8 +776,8 @@ MonoBehaviour:
   dungeonBounds:
     x: 0
     y: 0
-    width: 50
-    height: 50
+    width: 300
+    height: 300
   minRoomSize: 10
   wallHeight: 0
   doneRooms: []
