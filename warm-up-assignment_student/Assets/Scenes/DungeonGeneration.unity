@@ -776,19 +776,19 @@ MonoBehaviour:
   dungeonBounds:
     x: 0
     y: 0
-    width: 300
-    height: 300
+    width: 50
+    height: 50
   minRoomSize: 10
   wallHeight: 0
   doneRooms: []
-  generationMethod: 0
-  seed: 1
   wall: {fileID: 4552463386431841575, guid: 96edee4b6384fba47b5f4a5fe527e467, type: 3}
   floor: {fileID: 4419626725437610974, guid: 184336ed669be3649893facbf9db1b02, type: 3}
   wallParent: {fileID: 765534370}
   floorParent: {fileID: 417924242}
   bounds: {fileID: 891930846}
   navMeshSurface: {fileID: 417924243}
+  generationMethod: 1
+  seed: 1
 --- !u!4 &1232158168
 Transform:
   m_ObjectHideFlags: 0

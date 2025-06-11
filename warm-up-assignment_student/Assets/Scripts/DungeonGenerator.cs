@@ -22,12 +22,6 @@ public class DungeonGenerator : MonoBehaviour
     private Graph<RectInt> graph = new Graph<RectInt>();
     System.Diagnostics.Stopwatch stopwatch;
     System.Random random = new();
-    public GenerationMethod generationMethod;
-    public enum GenerationMethod
-    {
-        INSTANT, COROUTINE, PRESS
-    }
-    public int seed;
 
     public GameObject wall;
     public GameObject floor;
@@ -36,6 +30,12 @@ public class DungeonGenerator : MonoBehaviour
     public GameObject bounds;  
     [SerializeField] private HashSet<Vector3> wallPos = new();
     [SerializeField] private NavMeshSurface navMeshSurface;
+    public GenerationMethod generationMethod;
+    public enum GenerationMethod
+    {
+        INSTANT, COROUTINE
+    }
+    public int seed;
 
 
     [Button("Generate")]
@@ -57,11 +57,10 @@ public class DungeonGenerator : MonoBehaviour
             case GenerationMethod.COROUTINE:
                 yield return StartCoroutine(RoomSplittingCoroutine());
                 break;
-            case GenerationMethod.PRESS:
-                break;
         }
         DoorMaker();
         CreateGraph();
+
 
         //stopwatch stop and start generating the rooms.
         stopwatch.Stop();
@@ -72,6 +71,9 @@ public class DungeonGenerator : MonoBehaviour
         RectInt outerwall = new RectInt(dungeonBounds.x - 1, dungeonBounds.y - 1, dungeonBounds.width + 2, dungeonBounds.height + 2);
         doneRooms.Add(outerwall);
         Debug.Log("amount of rooms: " + doneRooms.Count);
+
+        SpawnAssets();
+        BakeNavMesh();
     }
 
     void Update()
@@ -122,7 +124,27 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
 
+
     #region Spliting
+    /*
+    Sequence roomsplitting(r)
+        make minimum room size
+        make list todorooms
+        make list donerooms
+        add dungeon max size to todorooms
+            split rooms in todorooms horizontally or vertically
+            if horrizontally 
+                pick a random place along the height of the room
+                    create new room with the random height as start pos
+                    if the new room is larger than the minimum room(width and height) add room to todorooms
+                    else add room to donerooms
+            if vertically
+                pick a random place along the width of the room
+                create new room with the random width as start pos
+                if the new room is larger than the minimum room(height and width) add room to todorooms
+                else add to donerooms
+    */
+    
     void Splitrooms(RectInt room)
     {
         if (room.width > room.height)
@@ -164,8 +186,23 @@ public class DungeonGenerator : MonoBehaviour
                 doneRooms.Add(newRoom2);
         }
     }
-    #endregion 
+    #endregion
     #region Doors
+    /*
+    Sequence doormaker
+    make door list
+    loop through all the rooms
+        loop through all the next rooms
+            if two rooms intersect
+                if horizontally intersect and overlap is longer than 3 units
+                    pick a random pos on this intersection
+                    make a rect int there
+                    add this rect int to doorslist
+                if vertically intersects and overlap is longer than 3 units
+                    pick a random pos on this intersection
+                    make a rect int there
+                    add this rect int to doorslist
+    */
     [Button("Doors")]
     void DoorMaker()
     {
@@ -196,6 +233,15 @@ public class DungeonGenerator : MonoBehaviour
     #endregion
 
     #region Graph
+    /*
+    Sequence CreateGraph
+        make a node in the middle of all rooms
+        make a node on every door pos
+        loop through each room node in the graph
+            loop through each door node in the graph
+                if the door node is in a room 
+                    make an edge from the middle of the room to the door node
+    */
     void CreateGraph()
     {
         foreach (RectInt room in doneRooms)
@@ -320,9 +366,10 @@ public class DungeonGenerator : MonoBehaviour
         }
     }
     #endregion
+    
     #region Navmesh
 
-        [Button]
+    [Button]
     public void BakeNavMesh()
     {
         navMeshSurface.BuildNavMesh();
